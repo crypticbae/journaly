@@ -6,7 +6,7 @@ import { prisma } from '@/lib/prisma'
 // PATCH - Notiz Pin-Status togglen
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -18,6 +18,7 @@ export async function PATCH(
       )
     }
 
+    const params = await context.params
     const { id } = params
     const body = await request.json()
     const { action } = body
