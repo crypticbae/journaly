@@ -23,7 +23,7 @@ services:
 
   # Journaly Trading Journal App - ALLES AUTOMATISCH!
   app:
-    image: node:18-alpine
+    image: node:20-alpine
     container_name: journaly-app
     restart: unless-stopped
     working_dir: /app
