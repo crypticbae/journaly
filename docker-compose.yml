@@ -1,0 +1,97 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  efx-postgres:
+    image: postgres:15-alpine
+    container_name: efx-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: efx_user
+      POSTGRES_PASSWORD: efx_secure_password_2024
+      POSTGRES_DB: trading_journal
+      PGDATA: /data/postgres
+    volumes:
+      - efx_postgres_data:/data/postgres
+    ports:
+      - "5434:5432"
+    networks:
+      - efx-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U efx_user -d trading_journal"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Journaly Trading Journal App
+  journaly-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: journaly-app
+    restart: unless-stopped
+    ports:
+      - "5885:5885"
+    environment:
+      # Database
+      DATABASE_URL: "postgresql://efx_user:efx_secure_password_2024@efx-postgres:5432/trading_journal?schema=public"
+      
+      # NextAuth
+      NEXTAUTH_URL: "http://localhost:5885"
+      NEXTAUTH_SECRET: "your-super-secret-jwt-key-change-this-in-production-please"
+      
+      # Email (Optional - für Admin-Benachrichtigungen)
+      EMAIL_SERVER_HOST: ""
+      EMAIL_SERVER_PORT: "587"
+      EMAIL_SERVER_USER: ""
+      EMAIL_SERVER_PASSWORD: ""
+      EMAIL_FROM: "noreply@tradingjournal.com"
+      
+      # Admin
+      ADMIN_EMAIL: "admin@tradingjournal.com"
+      
+      # App Settings
+      NODE_ENV: "production"
+      APP_URL: "http://localhost:5885"
+      PORT: "5885"
+    networks:
+      - efx-network
+    depends_on:
+      efx-postgres:
+        condition: service_healthy
+    volumes:
+      # Für persistente Uploads (falls vorhanden)
+      - efx_uploads:/app/uploads
+
+  # PgAdmin (Optional - für Datenbank-Management)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: efx-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@efx.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    volumes:
+      - efx_pgadmin_data:/var/lib/pgadmin
+    ports:
+      - "5436:80"
+    networks:
+      - efx-network
+    depends_on:
+      efx-postgres:
+        condition: service_healthy
+    profiles:
+      - admin # Nur starten wenn explizit gewünscht
+
+volumes:
+  efx_postgres_data:
+    driver: local
+  efx_pgadmin_data:
+    driver: local
+  efx_uploads:
+    driver: local
+
+networks:
+  efx-network:
+    driver: bridge 

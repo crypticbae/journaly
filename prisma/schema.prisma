@@ -1,0 +1,291 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User Management Models
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  password  String
+  role      UserRole @default(USER)
+  status    UserStatus @default(PENDING)
+  emailVerified DateTime?
+  image     String?
+  
+  // Registration Info
+  registeredAt DateTime @default(now())
+  approvedAt   DateTime?
+  approvedBy   String?
+  rejectedAt   DateTime?
+  rejectionReason String?
+  
+  // Relations
+  accounts Account[]
+  sessions Session[]
+  tradingAccounts TradingAccount[]
+  tradeNotes TradeNote[]
+  
+  // Audit fields
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// Trading Journal Models
+model TradingAccount {
+  id          String @id @default(cuid())
+  userId      String
+  
+  // Account Info
+  name        String
+  description String?
+  accountNumber String
+  brokerName  String?
+  currency    String @default("USD")
+  
+  // Account Settings
+  isActive    Boolean @default(true)
+  isDefault   Boolean @default(false)
+  
+  // Display Settings
+  color       String? // For UI differentiation
+  icon        String? // Icon identifier
+  
+  // Relations
+  user        User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  trades      Trade[]
+  accountSummaries AccountSummary[]
+  
+  // Audit fields
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@unique([userId, accountNumber])
+  @@index([userId])
+  @@map("trading_accounts")
+}
+
+model Trade {
+  id            String @id @default(cuid())
+  tradingAccountId String
+  
+  // Trade Details
+  openTime      String
+  ticket        String
+  type          TradeType
+  size          Float
+  instrument    String
+  price         Float
+  exitPrice     Float?
+  orderId       String?
+  comment       String?
+  entry         TradeEntry
+  
+  // Financial Details
+  commission    Float @default(0)
+  fee          Float @default(0)
+  swap         Float @default(0)
+  profit       Float @default(0)
+  
+  // Additional Fields
+  notes        String? // User notes
+  tags         String? // Comma-separated tags
+  
+  // Relations
+  tradingAccount TradingAccount @relation(fields: [tradingAccountId], references: [id], onDelete: Cascade)
+  tradeNotes     TradeNote[]
+  
+  // Audit fields
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  @@index([tradingAccountId])
+  @@index([instrument])
+  @@index([openTime])
+  @@map("trades")
+}
+
+model TradeNote {
+  id       String @id @default(cuid())
+  tradeId  String?
+  userId   String
+  
+  // Note Content
+  title    String
+  content  String
+  
+  // Bewertungen (1-10 Skala)
+  convictionBefore  Int?  // Überzeugung vor dem Trade (1-10)
+  emotionAfter      Int?  // Gefühlslage nach dem Trade (1-10)
+  
+  // Kategorien/Tags
+  category String? // z.B. "Strategie", "Psychologie", "Marktanalyse"
+  tags     String? // Comma-separated tags
+  
+  // Settings
+  isPrivate Boolean @default(false)
+  isPinned  Boolean @default(false)
+  
+  // Relations
+  trade    Trade? @relation(fields: [tradeId], references: [id], onDelete: SetNull)
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Audit fields
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([tradeId])
+  @@index([category])
+  @@index([createdAt])
+  @@map("trade_notes")
+}
+
+model AccountSummary {
+  id                    Int @id @default(autoincrement())
+  tradingAccountId      String
+  
+  // Summary Info
+  date                  String
+  currency              String @default("USD")
+  
+  // Financial Data
+  closedPnL            Float
+  balance              Float
+  equity               Float
+  previousBalance      Float @default(0)
+  previousEquity       Float @default(0)
+  totalCreditFacility  Float @default(0)
+  floatingPnL          Float @default(0)
+  marginRequirements   Float @default(0)
+  availableMargin      Float @default(0)
+  
+  // Relations
+  tradingAccount       TradingAccount @relation(fields: [tradingAccountId], references: [id], onDelete: Cascade)
+  
+  // Audit fields
+  createdAt            DateTime @default(now())
+  
+  @@index([tradingAccountId])
+  @@index([date])
+  @@map("account_summaries")
+}
+
+// System Models
+model SystemSettings {
+  id    String @id @default(cuid())
+  key   String @unique
+  value String
+  type  SettingType @default(STRING)
+  
+  description String?
+  category    String?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("system_settings")
+}
+
+model AuditLog {
+  id        String @id @default(cuid())
+  userId    String?
+  action    String
+  entity    String
+  entityId  String?
+  oldData   Json?
+  newData   Json?
+  ipAddress String?
+  userAgent String?
+  
+  createdAt DateTime @default(now())
+  
+  @@index([userId])
+  @@index([action])
+  @@index([entity])
+  @@map("audit_logs")
+}
+
+// Enums
+enum UserRole {
+  ADMIN
+  USER
+}
+
+enum UserStatus {
+  PENDING     // Waiting for admin approval
+  APPROVED    // Active user
+  REJECTED    // Registration rejected
+  SUSPENDED   // Temporarily suspended
+  INACTIVE    // Deactivated account
+}
+
+enum TradeType {
+  buy
+  sell
+}
+
+enum TradeEntry {
+  in
+  out
+}
+
+enum SettingType {
+  STRING
+  NUMBER
+  BOOLEAN
+  JSON
+}

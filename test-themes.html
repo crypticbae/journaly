@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>daisyUI Theme Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.css" rel="stylesheet" type="text/css" />
+    <script>
+        function switchTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            document.getElementById('current-theme').textContent = theme;
+            console.log('Switched to theme:', theme);
+        }
+    </script>
+</head>
+<body data-theme="light" class="min-h-screen bg-base-100 p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-4xl font-bold text-base-content mb-8">🧪 Static daisyUI Theme Test</h1>
+        
+        <div class="mb-8">
+            <p class="text-base-content mb-4">Current theme: <span id="current-theme" class="font-mono bg-base-200 px-2 py-1 rounded">light</span></p>
+            
+            <div class="flex gap-4 flex-wrap mb-6">
+                <button onclick="switchTheme('light')" class="btn btn-primary">Light</button>
+                <button onclick="switchTheme('dark')" class="btn btn-secondary">Dark</button>
+                <button onclick="switchTheme('nord')" class="btn btn-accent">Nord</button>
+                <button onclick="switchTheme('cupcake')" class="btn btn-info">Cupcake</button>
+                <button onclick="switchTheme('dracula')" class="btn btn-warning">Dracula</button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Color Palette -->
+            <div class="card bg-base-200 shadow-xl">
+                <div class="card-body">
+                    <h3 class="card-title">Color Palette</h3>
+                    <div class="grid grid-cols-4 gap-2">
+                        <div class="text-center">
+                            <div class="w-full h-16 bg-primary rounded mb-1"></div>
+                            <span class="text-xs">primary</span>
+                        </div>
+                        <div class="text-center">
+                            <div class="w-full h-16 bg-secondary rounded mb-1"></div>
+                            <span class="text-xs">secondary</span>
+                        </div>
+                        <div class="text-center">
+                            <div class="w-full h-16 bg-accent rounded mb-1"></div>
+                            <span class="text-xs">accent</span>
+                        </div>
+                        <div class="text-center">
+                            <div class="w-full h-16 bg-neutral rounded mb-1"></div>
+                            <span class="text-xs">neutral</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Components -->
+            <div class="card bg-base-200 shadow-xl">
+                <div class="card-body">
+                    <h3 class="card-title">Components</h3>
+                    <div class="space-y-3">
+                        <button class="btn btn-primary w-full">Primary Button</button>
+                        <button class="btn btn-secondary w-full">Secondary Button</button>
+                        <input type="text" placeholder="Input field" class="input input-bordered w-full" />
+                        <div class="alert alert-info">
+                            <span>Info alert</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-8 p-6 bg-base-200 rounded-lg">
+            <h3 class="text-xl font-semibold mb-4">Expected Results:</h3>
+            <ul class="list-disc list-inside space-y-2">
+                <li><strong>Light:</strong> White background, dark text</li>
+                <li><strong>Dark:</strong> Dark background, light text</li>
+                <li><strong>Nord:</strong> Cool blue tones (primary should be blue)</li>
+                <li><strong>Cupcake:</strong> Pink/purple tones</li>
+                <li><strong>Dracula:</strong> Dark with purple/pink accents</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html> 
