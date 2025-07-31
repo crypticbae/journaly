@@ -65,7 +65,7 @@ services:
       - app_data:/app/data
     command: |
       sh -c "
-        echo '🚀 FINAL SETUP - NO MORE TYPESCRIPT BULLSHIT!' &&
+        echo '🚀 FINAL SETUP - ROBUST FILE COPY!' &&
         
         # Check if already running
         if [ -f '/app/.ready' ]; then
@@ -73,16 +73,17 @@ services:
           npm start
         else
           echo '🔧 Installing system dependencies...' &&
-          apk add --no-cache git python3 make g++ &&
+          apk add --no-cache git python3 make g++ rsync &&
           
           echo '📂 Getting source code...' &&
           rm -rf /tmp/journaly &&
           git clone https://github.com/crypticbae/journaly.git /tmp/journaly &&
           
-          echo '🗂️ Copying files...' &&
-          rm -rf ./* .[^.]* 2>/dev/null || true &&
-          cp -r /tmp/journaly/* . &&
-          cp -r /tmp/journaly/.[^.]* . 2>/dev/null || true &&
+          echo '🗂️ Robust file copying...' &&
+          cd /tmp/journaly &&
+          find . -name '.git' -type d -exec rm -rf {} + 2>/dev/null || true &&
+          tar cf - . | (cd /app && tar xf -) &&
+          cd /app &&
           rm -rf /tmp/journaly &&
           
           echo '🔥 REMOVING TYPESCRIPT BULLSHIT...' &&
@@ -95,6 +96,10 @@ services:
           echo '🗄️ Database setup...' &&
           npx prisma generate &&
           npx prisma db push &&
+          
+          echo '👤 Creating admin user (installing tsx)...' &&
+          npm install -g tsx &&
+          npx tsx prisma/seed.ts &&
           
           echo '🏗️ Building (NO TYPESCRIPT)...' &&
           NODE_OPTIONS='--max-old-space-size=2048' npm run build -- --no-lint &&
