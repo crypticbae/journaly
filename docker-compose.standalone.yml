@@ -52,6 +52,9 @@ services:
       EMAIL_SERVER_PASSWORD: ""
       EMAIL_FROM: "noreply@journaly.com"
       
+      # Python path for node-gyp
+      PYTHON: "/usr/bin/python3"
+      
     networks:
       - journaly-network
     depends_on:
@@ -64,17 +67,27 @@ services:
       sh -c "
         echo '🚀 Starting Journaly Trading Journal...' &&
         
-        # Check if app is already set up
-        if [ -f 'package.json' ]; then
-          echo '✅ App already set up, starting...' &&
+        # Check if app is properly installed (node_modules with next)
+        if [ -f 'node_modules/.bin/next' ] && [ -f '.next/BUILD_ID' ]; then
+          echo '✅ App already built and ready, starting...' &&
+          npm start
+        elif [ -f 'package.json' ] && [ -d 'node_modules' ]; then
+          echo '🏗️ App installed but not built, building...' &&
+          npm run build &&
           npm start
         else
-          echo '📥 Installing dependencies...' &&
-          apk add --no-cache git &&
+          echo '📥 Fresh installation needed...' &&
           
-          echo '📂 Cloning from GitHub...' &&
+          # Install system dependencies for native compilation
+          echo '🔧 Installing system dependencies...' &&
+          apk add --no-cache git python3 make g++ &&
+          
+          echo '📂 Downloading source code...' &&
           rm -rf /tmp/journaly &&
           git clone https://github.com/crypticbae/journaly.git /tmp/journaly &&
+          
+          # Clear current directory and copy source
+          rm -rf ./* .[^.]* 2>/dev/null || true &&
           cp -r /tmp/journaly/* . &&
           cp -r /tmp/journaly/.[^.]* . 2>/dev/null || true &&
           rm -rf /tmp/journaly &&
