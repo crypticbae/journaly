@@ -14,6 +14,7 @@ import { PerformanceView } from "@/components/performance-view"
 import { SettingsView } from "@/components/settings-view"
 import { CalendarView } from "@/components/calendar-view"
 import { NotesView } from "@/components/notes-view"
+import { NewsFeed } from "@/components/news-feed"
 import { AccountSelector } from "@/components/accounts/account-selector"
 import { useTradingAccounts } from "@/hooks/use-trading-accounts"
 import { Trade } from "@/lib/email-parser"
@@ -160,6 +161,7 @@ export default function DashboardPage() {
       case "analytics": return "Analytics"
       case "trades": return "Alle Trades"
       case "notes": return "Trading Notizen"
+      case "news": return "News & Markets"
       case "upload": return "Upload"
       case "profit": return "Profit/Loss"
       case "performance": return "Performance"
@@ -198,6 +200,9 @@ export default function DashboardPage() {
       
       case "notes":
         return <NotesView notes={[]} trades={trades} />
+      
+      case "news":
+        return <NewsFeed />
       
       case "upload":
         return <UploadComponent onUploadSuccess={handleUploadSuccess} />

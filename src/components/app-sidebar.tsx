@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { CalendarDays, LayoutDashboard, Inbox, Search, Settings, TrendingUpDown, LineChart, CloudUpload, Wallet, Shield, StickyNote } from "lucide-react"
+import { CalendarDays, LayoutDashboard, Inbox, Search, Settings, TrendingUpDown, LineChart, CloudUpload, Wallet, Shield, StickyNote, Newspaper } from "lucide-react"
 import { useSession } from "next-auth/react"
 
 // Menu items.
@@ -30,6 +30,11 @@ const items = [
     title: "Notizen",
     url: "#notes",
     icon: StickyNote,
+  },
+  {
+    title: "News & Markets",
+    url: "#news",
+    icon: Newspaper,
   },
   {
     title: "Upload",
