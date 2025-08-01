@@ -67,8 +67,29 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }) {
       if (token) {
         session.user.id = token.sub!
-        session.user.role = token.role as UserRole
-        session.user.status = token.status as UserStatus
+        
+        // WICHTIG: Immer aktuellen Status aus DB laden
+        // um sicherzustellen, dass Freischaltungen sofort wirken
+        try {
+          const currentUser = await prisma.user.findUnique({
+            where: { id: token.sub! },
+            select: { role: true, status: true }
+          })
+          
+          if (currentUser) {
+            session.user.role = currentUser.role
+            session.user.status = currentUser.status
+          } else {
+            // User existiert nicht mehr
+            session.user.role = token.role as UserRole
+            session.user.status = token.status as UserStatus
+          }
+        } catch (error) {
+          console.error('Error fetching current user status:', error)
+          // Fallback zu Token-Werten
+          session.user.role = token.role as UserRole
+          session.user.status = token.status as UserStatus
+        }
       }
       return session
     }

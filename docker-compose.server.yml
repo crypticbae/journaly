@@ -21,7 +21,7 @@ services:
       timeout: 10s
       retries: 3
 
-  # Journaly Trading Journal App - BRUTAL SIMPLE!
+  # Journaly Trading Journal App - SERVER VERSION
   app:
     image: node:20-alpine
     container_name: journaly-app
@@ -33,13 +33,13 @@ services:
       # Database
       DATABASE_URL: "postgresql://journaly_user:journaly_password_2024@postgres:5432/journaly_db?schema=public"
       
-      # NextAuth
-      NEXTAUTH_URL: "http://localhost:5885"
+      # NextAuth - WICHTIG: Ändere diese URLs für deinen Server!
+      NEXTAUTH_URL: "http://YOUR_SERVER_IP:5885"
       NEXTAUTH_SECRET: "journaly-super-secret-key-change-in-production-32chars"
       
       # App Settings
       NODE_ENV: "production"
-      APP_URL: "http://localhost:5885"
+      APP_URL: "http://YOUR_SERVER_IP:5885"
       PORT: "5885"
       
       # Admin
@@ -52,7 +52,7 @@ services:
       EMAIL_SERVER_PASSWORD: ""
       EMAIL_FROM: "noreply@journaly.com"
       
-      # TYPESCRIPT COMPLETELY DISABLED
+      # System
       NEXT_TELEMETRY_DISABLED: "1"
       
     networks:
@@ -65,7 +65,7 @@ services:
       - app_data:/app/data
     command: |
       sh -c "
-        echo '🚀 FINAL SETUP - ROBUST FILE COPY!' &&
+        echo '🚀 SERVER SETUP - Fixed Import Issues!' &&
         
         # Check if already running
         if [ -f '/app/.ready' ]; then
@@ -86,7 +86,7 @@ services:
           cd /app &&
           rm -rf /tmp/journaly &&
           
-          echo '🔥 CREATING MINIMAL TSCONFIG FOR PATH MAPPING...' &&
+          echo '🔧 CREATING MINIMAL TSCONFIG FOR PATH MAPPING...' &&
           echo '{
             \"compilerOptions\": {
               \"paths\": {
@@ -107,7 +107,7 @@ services:
           npm install -g tsx &&
           npx tsx prisma/seed.ts &&
           
-          echo '🏗️ Building (NO TYPESCRIPT)...' &&
+          echo '🏗️ Building (Path-mapping enabled)...' &&
           NODE_OPTIONS='--max-old-space-size=2048' npm run build -- --no-lint &&
           
           echo '✅ Ready!' &&
